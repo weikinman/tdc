@@ -1,42 +1,38 @@
 <template>
-    <div class="preview-box" :style="`width:${paramWidth}`">
-        <!-- <draggable class="preview-content" group="a" :sort="false" :list="fieldDataArr" item-key="key">
+    <div class="preview-box" :style="`width:${props.paramWidth}`">
+        <!-- <draggable class="preview-content" :group="{name:'layouts'}" :sort="false" :list="fieldDataArr" item-key="key">
             <template #item="{element}">
-                <div class="preview-item"> {{element.key}}</div>
+                <div class="preview-layout">
+                    <div> {{element.key}}</div>
+                </div>
             </template>
         </draggable> -->
-        <Nested :list="fieldDataArr"></Nested>
+        <Nested :group="{name:'sprite'}" :list="fieldDataArr"></Nested>
     </div>
 </template>
+<script>
+    export default {
+     name:'Preview'   
+    }
+</script>
 <script setup>
 import draggable from 'vuedraggable'
 import Nested from './nested.vue'
 const fieldDataArr = reactive([]);
 let props = defineProps({
     paramWidth:''   
-})
-const activeNames = ref('')
-function handleChange() {
-      console.log('changed');
-    }
-    function inputChanged(value) {
-      activeNames = value;
-    }
-    function getComponentData() {
-      return {
-        onChange: handleChange,
-        onInput: inputChanged,
-        wrap: true,
-        value: activeNames
-      };
-    }
+});
 </script>
 <style scoped>
 .preview-box{
     height: 500px;
     /* width:400px; */
-    border: 1px solid #ddd;
+    border: 1px dashed #ddd;
     float: left;
+}
+.preview-layout{
+    height: 300px;
+    border: 1px dashed #ddd;
 }
 .preview-content{
     width:100%;

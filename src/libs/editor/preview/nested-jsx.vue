@@ -20,27 +20,12 @@ const Nested = defineComponent({
         const fieldDataArr = reactive([]);
         const activeNames = ref('');
         console.log('setup inso',props,slots);
-        const getChild = (element)=>{
-            let type = element[DRAGER_TYPE_KEY];
-            let isLayout = type=='layout';
-            let res = ('');
-            if(!isLayout){
-                res = <div class="preview-item"> {element.key || element.name}</div>
-                    }else{
-                        res = <Nested class={type==='layout' ? 'preview-child-layout':''}  group={{name:'sprite'}}  list={element.children}></Nested>
-                    }
-            return (
-               res
-            )
-        }
         const itemSlots = {
             item: ({element, index}) => {
                 return (
                     <div class={element[DRAGER_TYPE_KEY]==='layout' ? 'preview-layout':'preview-sprite'}>
-                        {
-                           
-                            getChild(element)
-                        }
+                        <div class="preview-item"> {element.key || element.name}</div>
+                        <Nested class={element[DRAGER_TYPE_KEY]==='layout' ? 'preview-child-layout':''}  group={{name:'sprite'}}  list={element.children}></Nested>
                     </div>
                 )
             }

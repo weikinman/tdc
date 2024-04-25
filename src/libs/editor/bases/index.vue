@@ -1,40 +1,18 @@
 <template>
 <div  class="base-box">
-    <div v-for="(item,index) in fieldDataArr" :key="index" >
-        <draggable  group="a" :list="item" :sort="false" item-key="key">
-            <template #item="{element}">
-            
-                <div class="base-item"> {{element.key}}</div>
-            </template>
-        </draggable>
-    </div>
+    <Layouts></Layouts>
+    <Comps></Comps>
+    <FieldS></FieldS>
 </div>
 </template>
 <script setup>
 import draggable from 'vuedraggable'
 import fields from '@/libs/core/fields/index';
-let props = defineProps({
-    entityName:{
-        default:'user'   
-    },   
-})
-let fieldData = {};
-let fieldDataArr = reactive([]);
-Object.keys(fields).forEach(item=>{
-    const fieldInfo = fields[item];
-    if(fieldInfo){
-        let res = Object.keys(fieldInfo).map(key=>{
-            fieldData[key] = '';
-            const info = {
-                ...fieldInfo[key],
-                children:[]
-            };
-            return  info;
-        });
-        fieldDataArr.push(res)
-    }
+import Layouts from './layout/index.vue'
+import Comps from './components/index.vue'
+import FieldS from './fields/index.vue'
+import { DRAGER_TYPE_KEY } from '@/libs/const/editor/index'
 
-});
 </script>
 <style scoped>
 .base-box{

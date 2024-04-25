@@ -1,0 +1,1 @@
+export const DRAGER_TYPE_KEY = '__D_TYPE__';
