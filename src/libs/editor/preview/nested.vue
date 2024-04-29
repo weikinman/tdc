@@ -2,9 +2,8 @@
 <script lang="jsx">
 
 import draggable from 'vuedraggable'
-import { DRAGER_TYPE_KEY } from '@/libs/const/editor/index'
 import RenderCompoent from './renderComponent'
-
+import { DRAGER_TYPE_KEY, DRAGER_COUNT_KEY } from '@/libs/const/editor/index'
 const Nested = defineComponent({
     name:'Nested',   
     props:{
@@ -21,22 +20,36 @@ const Nested = defineComponent({
         const activeNames = ref('');
         console.log('setup inso',props,slots);
         const getChild = (element)=>{
+           
             let type = element[DRAGER_TYPE_KEY];
             let isLayout = type=='layout';
+            let isComponents = type=='components';
+            let toProps = element.toProps;
             let res = ('');
-            if(!isLayout){
+            const CompoentName = element.component;
+            console.log('getChild prev',element,toProps);
+            if(isComponents){
+               
+                res = (
+                    <CompoentName {...toProps}>
+                        {element.name}
+                    </CompoentName>
+                )
+            }else if(!isLayout){
                 res = <div class="preview-item"> {element.key || element.name}</div>
-                    }else{
-                        res = <Nested class={type==='layout' ? 'preview-child-layout':''}  group={{name:'sprite'}}  list={element.children}></Nested>
-                    }
-            return (
-               res
-            )
+            }else {
+                res = <Nested class={type==='layout' ? 'preview-child-layout':''}  group={{name:'sprite'}}  list={element.children}></Nested>
+            }
+            console.log('getChild',res);
+            return res
         }
         const itemSlots = {
             item: ({element, index}) => {
+                let type = element[DRAGER_TYPE_KEY];
+                
+                console.log('itemSlots',element,);
                 return (
-                    <div class={element[DRAGER_TYPE_KEY]==='layout' ? 'preview-layout':'preview-sprite'}>
+                    <div class={type==='layout' ? 'preview-layout':'preview-sprite'}>
                         {
                            
                             getChild(element)
@@ -46,7 +59,7 @@ const Nested = defineComponent({
             }
         }
         return ()=>(
-            <draggable class="preview-content" group={props.group} sort={false} list={props.list} item-key="key" v-slots={itemSlots}>
+            <draggable class="preview-content" group={props.group} sort={false} list={props.list} item-key={DRAGER_COUNT_KEY} v-slots={itemSlots}>
                 
             </draggable>
         ) 

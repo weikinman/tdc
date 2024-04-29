@@ -18,12 +18,12 @@ export default {
 <script setup>
 import draggable from 'vuedraggable'
 import * as elementPlus from 'element-plus'
-import { DRAGER_TYPE_KEY } from '@/libs/const/editor/index'
+import { DRAGER_TYPE_KEY, DRAGER_COUNT_KEY } from '@/libs/const/editor/index'
 import RenderCompoent from './renderComponent'
 const components = reactive([]);
 let groupOpts = { name: 'sprite', pull: 'clone', put: false };
 
-Object.keys(elementPlus).forEach(key => {
+Object.keys(elementPlus).forEach((key,index) => {
     const element = elementPlus[key];
     // console.log(element)
     //&& element.name.indexOf('Item')===-1 && element.name.indexOf('Column')===-1 && element.name.indexOf('Dropdown')===-1 && element.name.indexOf('Option')===-1&& element.name.indexOf('Select')===-1&& element.name.indexOf('ElStep')===-1
@@ -54,8 +54,9 @@ Object.keys(elementPlus).forEach(key => {
         console.log('Comp',Comp,element)
         components.push({
             [DRAGER_TYPE_KEY]: 'components',
+            [DRAGER_COUNT_KEY]:`component${index}`,
             name: element.name,
-            component: Comp,
+            component: element,
             toProps,
             children:[]
         })
