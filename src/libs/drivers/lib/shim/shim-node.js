@@ -1,3 +1,4 @@
+import request from '../../../../utils/request'
 const shim = {
     setInterval(_fn,_interval){
         return setInterval(_fn,_interval)

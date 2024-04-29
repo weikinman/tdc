@@ -198,13 +198,17 @@ class Setting extends BaseModel {
     static localData = {}
 
     static setLocalValue(key,value){
-        localStorage.setItem(key,JSon.Stringify(value));
+		console.log('setLocalValue',key,value)
+        localStorage.setItem(key,JSON.stringify(value));
     }
 
     static getLocalValue(key){
+		console.log('setLocalValue',key)
         const localStr = localStorage.getItem(key);
         if(localStr){
-            return JSON.parse(localStr);
+			const localObj = JSON.parse(localStr);
+			console.log('setLocalValue',localObj)
+            return localObj;
         }
     }
 

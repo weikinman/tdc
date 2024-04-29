@@ -16,12 +16,16 @@ export default async function start(onedriveUrl) {
     if(!searchOpt.code && !api.token()){
         location.href =  api.authCodeUrl('http://localhost/');
         return
-    }else if(api.token() && searchOpt.code){
+    }else if( searchOpt.code){
         await api.execTokenRequest(searchOpt.code, 'http://localhost/', true);
          location.search = '';
     }
+    if(api.token()){
+        setTimeout(()=>{
+            syncer.initFileApi();
+        },1000)
+    }
     
-    syncer.initFileApi();
 
     //    .execTokenRequest(authCode_, 'http://localhost/', true);
     console.log(SyncRegiest.reg)

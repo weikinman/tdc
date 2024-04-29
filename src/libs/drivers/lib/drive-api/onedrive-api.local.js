@@ -47,22 +47,10 @@ export default class OneDriveApi{
 
     auth_;
 
-    loginBaseUrl_ = 'https://login.microsoftonline.com';
-
-    graphBaseUrl_ = 'https://graph.microsoft.com'
-
     constructor(clientId,clientSecret){
         this.clientId_ = clientId;
         this.client_secret = clientSecret;
         this.auth_ = authInfo;
-    }
-
-    loginBaseUrl() {
-     return this.loginBaseUrl_;   
-    }
-
-    graphBaseUrl() {
-     return this.graphBaseUrl_   
     }
 
     clientId() {
@@ -80,11 +68,11 @@ export default class OneDriveApi{
      return false;   
     }
     tokenBaseUrl() {
-		return `${''}/common/oauth2/v2.0/token`;
+		return 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
 	}
 
 	nativeClientRedirectUrl() {
-		return `${this.loginBaseUrl()}/common/oauth2/nativeclient`;
+		return 'https://login.microsoftonline.com/common/oauth2/nativeclient';
 	}
     authCodeUrl(redirectUri) {
 		const query = {
@@ -94,7 +82,7 @@ export default class OneDriveApi{
 			redirect_uri: redirectUri,
 			prompt: 'login',
 		};
-		return `${this.loginBaseUrl()}/common/oauth2/v2.0/authorize?${stringify(query)}`;
+		return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${stringify(query)}`;
 	}
 	async execTokenRequest(code, redirectUri) {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
@@ -119,7 +107,6 @@ export default class OneDriveApi{
 		}
 
 		try {
-            console.log('execTokenRequest',r)
 			const json = await r.json();
             Setting.setValue(`sync.${3}.auth`, json ? JSON.stringify(json) : null);
             Setting.setLocalValue(`sync.${3}.auth`, json)
@@ -140,7 +127,7 @@ export default class OneDriveApi{
     token() {
         let auth = Setting.getLocalValue(`sync.${3}.auth`);
         if(auth){
-            auth = auth;
+            auth = JSON.parse(auth);
         }else{
             // auth = this.auth_;
         }
@@ -170,10 +157,10 @@ export default class OneDriveApi{
 		// In general, `path` contains a path relative to the base URL, but in some
 		// cases the full URL is provided (for example, when it's a URL that was
 		// retrieved from the API).
-		// if (url.indexOf('https://') !== 0) {
-		// 	const slash = path.indexOf('/') === 0 ? '' : '/';
-		// 	url = `/v1.0${slash}${path}`;
-		// }
+		if (url.indexOf('https://') !== 0) {
+			const slash = path.indexOf('/') === 0 ? '' : '/';
+			url = `https://graph.microsoft.com/v1.0${slash}${path}`;
+		}
 
 		if (query) {
 			url += url.indexOf('?') < 0 ? '?' : '&';
@@ -309,7 +296,7 @@ export default class OneDriveApi{
 	async execAccountPropertiesRequest() {
 
 		try {
-			const response = await this.exec('GET', '/v1.0/me/drive');
+			const response = await this.exec('GET', 'https://graph.microsoft.com/v1.0/me/drive');
 			const data = await response.json();
 			const accountProperties = { accountType: data.driveType, driveId: data.id };
 			return accountProperties;
