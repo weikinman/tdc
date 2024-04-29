@@ -6,9 +6,9 @@ export default class SyncRegiest{
     constructor() {
         
     }
-    static classById(syncId){
-        const info = this.reg[syncId];
-        if(!info) throw new Error('no syncId class');
+    static classById(syncTargetId){
+        const info = this.reg[syncTargetId];
+        if(!info) throw new Error('no syncTargetId class');
         return info;
     }
     static addClass(syncer){

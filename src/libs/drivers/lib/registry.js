@@ -17,15 +17,15 @@ export default class Registry{
     }
 
     //獲取同步器
-    getSyncer(syncId){
-        if(this.syncs_[syncId]){
-            return this.syncs_[syncId]
+    getSyncer(syncTargetId){
+        if(this.syncs_[syncTargetId]){
+            return this.syncs_[syncTargetId]
         }
 
-        const Syncer = SyncRegiest.classById(syncId);
+        const Syncer = SyncRegiest.classById(syncTargetId);
         let sync = new Syncer(this.db());
         sync.setLogger(this.logger());
-        this.syncs_[syncId] = sync;
+        this.syncs_[syncTargetId] = sync;
         return sync;
     }
 

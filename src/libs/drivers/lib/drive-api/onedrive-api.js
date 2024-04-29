@@ -1,5 +1,6 @@
 import shim from "../shim/shim-node";
 import { stringify, parse } from 'query-string';
+import Setting from '../setting/index.js'
 const urlUtils = {};
 urlUtils.objectToQueryString = function(query) {
 	if (!query) return '';
@@ -107,8 +108,11 @@ export default class OneDriveApi{
 
 		try {
 			const json = await r.json();
+            Setting.setValue(`sync.${3}.auth`, json ? JSON.stringify(json) : null);
+            Setting.setLocalValue(`sync.${3}.auth`, json)
 			this.setAuth(json);
 		} catch (error) {
+            console.error(error);
 			this.setAuth(null);
 			const text = await r.text();
 			error.message += `: ${text}`;
@@ -121,7 +125,13 @@ export default class OneDriveApi{
         // this.dispatch('')
     }
     token() {
-		return this.auth_ ? this.auth_.access_token : null;
+        let auth = Setting.getLocalValue(`sync.${3}.auth`);
+        if(auth){
+            auth = JSON.parse(auth);
+        }else{
+            // auth = this.auth_;
+        }
+		return auth ? auth.access_token : null;
 	}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
 	async exec(method, path, query = null, data = null, options = null) {

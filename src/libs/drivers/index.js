@@ -2,20 +2,25 @@ import SyncRegiest from "./lib/SyncRegiest";
 import SyncOneDrive from "./lib/SyncOneDrive";
 import { reg } from "./lib/registry";
 import { stringify, parse } from 'query-string';
+import Setting from "./lib/setting";
 
-export default function start(onedriveUrl) {
+export default async function start(onedriveUrl) {
     SyncRegiest.addClass(SyncOneDrive);
     const authCode_ = 'M.C543_SN1.2.U.f7e78fad-2d03-c492-b4ed-50681832af8f';
     const syncer = reg
     .getSyncer(SyncOneDrive.id())
-    const api = syncer
+    const api = await syncer
         .api();
     const searchOpt = parse(location.search);
-    if(!searchOpt.code){
+    console.log(api.token())
+    if(!searchOpt.code && !api.token()){
         location.href =  api.authCodeUrl('http://localhost/');
         return
+    }else if(api.token() && searchOpt.code){
+        await api.execTokenRequest(searchOpt.code, 'http://localhost/', true);
+         location.search = '';
     }
-    api.execTokenRequest(searchOpt.code, 'http://localhost/', true);
+    
     syncer.initFileApi();
 
     //    .execTokenRequest(authCode_, 'http://localhost/', true);

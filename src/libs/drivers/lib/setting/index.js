@@ -195,6 +195,19 @@ class Setting extends BaseModel {
 	static settingFilename_ = 'settings.json';
 	static buildInMetadata_ = null;
 
+    static localData = {}
+
+    static setLocalValue(key,value){
+        localStorage.setItem(key,JSon.Stringify(value));
+    }
+
+    static getLocalValue(key){
+        const localStr = localStorage.getItem(key);
+        if(localStr){
+            return JSON.parse(localStr);
+        }
+    }
+
 	static tableName() {
 		return 'settings';
 	}
@@ -2144,10 +2157,10 @@ class Setting extends BaseModel {
 			value: this.formatValue(key, value),
 		});
 
-		this.changedKeys_.push(key);
+		// this.changedKeys_.push(key);
 
-		this.scheduleSave();
-		this.scheduleChangeEvent();
+		// this.scheduleSave();
+		// this.scheduleChangeEvent();
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied

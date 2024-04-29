@@ -14,7 +14,7 @@ export default class SyncOneDrive extends SyncBase{
     }
 
 
-    syncId() {
+    syncTargetId() {
      return SyncOneDrive.id();   
     }
 
@@ -30,7 +30,7 @@ export default class SyncOneDrive extends SyncBase{
     }
 
     async initFileApi() {
-		let context = Setting.value(`sync.${this.syncId()}.context`);
+		let context = Setting.value(`sync.${this.syncTargetId()}.context`);
 		context = context === '' ? null : JSON.parse(context);
 		let accountProperties = context ? context.accountProperties : null;
 		const api = this.api();
@@ -48,7 +48,7 @@ export default class SyncOneDrive extends SyncBase{
 		// eslint-disable-next-line prefer-regex-literals -- Old code before rule was applied
 		const baseDir = RegExp(/[^\u0021-\u00ff]/).exec(appDir) !== null ? encodeURI(appDir) : appDir;
 		const fileApi = new FileApi(baseDir, new FileApiDriverOneDrive(this.api()));
-		fileApi.setSyncTargetId(this.syncId());
+		fileApi.setSyncTargetId(this.syncTargetId());
 		fileApi.setLogger(this.logger());
 		return fileApi;
 	}
