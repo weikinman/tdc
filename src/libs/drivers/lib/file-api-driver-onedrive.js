@@ -1,4 +1,5 @@
 import moment from 'moment';
+import {basename,dirname} from './path'
 async function basicDelta(path, getDirStatFn, options) {
 	const outputLimit = 50;
 	const itemIds = await options.allItemIdsHandler();
@@ -137,12 +138,7 @@ import Buffer from 'buffer';
 const ltrimSlashes = function(value){
 	return value;
 }
-function dirname(value){
-	return value
-}
-function basename(value){
-	return value
-}
+
 let count = 0;
 export class FileApiDriverOneDrive {
 	constructor(api) {
@@ -159,7 +155,7 @@ export class FileApiDriverOneDrive {
 
 	itemFilter_() {
 		return {
-			select: 'name,file,folder,fileSystemInfo,parentReference',
+			select: '*'//'name,file,folder,fileSystemInfo,parentReference',
 		};
 	}
 
@@ -194,6 +190,7 @@ export class FileApiDriverOneDrive {
 	async statRaw_(path) {
 		let item = null;
 		try {
+			console.log('statRaw_',path,this.makePath_(path), this.itemFilter_())
 			item = await this.api_.execJson('GET', this.makePath_(path), this.itemFilter_());
 		} catch (error) {
 			if (error.code === 'itemNotFound') return null;
@@ -285,7 +282,7 @@ export class FileApiDriverOneDrive {
 			byteSize = (await shim.fsDriver().stat(options.path)).size;
 		} else {
 			options.headers = { 'Content-Type': 'text/plain' };
-			byteSize = Buffer.byteLength(content);
+			byteSize = new Blob([content]).size;
 		}
 
 		path = byteSize < 4 * 1024 * 1024 ? `${this.makePath_(path)}:/content` : `${this.makePath_(path)}:/createUploadSession`;

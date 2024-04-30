@@ -1,6 +1,8 @@
 import SyncBase from './SyncBase'
 import OneDriveApi from './drive-api/onedrive-api';
 import Setting from './setting/index.js'
+import { FileApi } from './file-api.js';
+import { FileApiDriverOneDrive } from './file-api-driver-onedrive.js';
 export default class SyncOneDrive extends SyncBase{
     
     api_;
@@ -24,9 +26,27 @@ export default class SyncOneDrive extends SyncBase{
             id: 'e09fc0de-c958-424f-83a2-e56a721d331b',
             secret: 'JA3cwsqSGHFtjMwd5XoF5L5',
         }
-        const onedriveApi = new OneDriveApi(clientInfo.id,clientInfo.secret);
+        this.api_ = new OneDriveApi(clientInfo.id,clientInfo.secret);
 
-        return onedriveApi;
+
+		this.api_.on('authRefreshed', (a) => {
+			Setting.setValue(`sync.${this.syncTargetId()}.auth`, a ? JSON.stringify(a) : null);
+			Setting.setLocalValue(`sync.${this.syncTargetId()}.auth`,a);
+		});
+
+		let auth = Setting.value(`sync.${this.syncTargetId()}.auth`);
+		if (auth) {
+			try {
+				auth = JSON.parse(auth);
+			} catch (error) {
+				
+				auth = null;
+			}
+
+			this.api_.setAuth(auth);
+		}
+
+        return this.api_;
     }
 
     async initFileApi() {
@@ -36,7 +56,10 @@ export default class SyncOneDrive extends SyncBase{
 		const api = this.api();
 
 		if (!accountProperties) {
-			accountProperties = await api.execAccountPropertiesRequest();
+			accountProperties = await api.execAccountPropertiesRequest(null,()=>{
+				api.setAuth(null);
+				Setting.removeLocalValue(`sync.${this.syncTargetId()}.auth`)
+			});
 			context ? context.accountProperties = accountProperties : context = { accountProperties: accountProperties };
 			Setting.setValue(`sync.${this.syncTargetId()}.context`, JSON.stringify(context));
 		}

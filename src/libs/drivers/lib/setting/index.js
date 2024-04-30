@@ -211,7 +211,13 @@ class Setting extends BaseModel {
             return localObj;
         }
     }
-
+	static removeLocalValue(key){
+		console.log('setLocalValue',key)
+        const localStr = localStorage.getItem(key);
+        if(localStr){
+			localStorage.removeItem(key);
+        }
+    }
 	static tableName() {
 		return 'settings';
 	}

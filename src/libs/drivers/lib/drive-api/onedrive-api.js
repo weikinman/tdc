@@ -51,10 +51,16 @@ export default class OneDriveApi{
 
     graphBaseUrl_ = 'https://graph.microsoft.com'
 
+    accountProperties_;
+
+    listeners_ = {
+        authRefreshed:[]
+    };
+
     constructor(clientId,clientSecret){
         this.clientId_ = clientId;
         this.client_secret = clientSecret;
-        this.auth_ = authInfo;
+        this.auth_ = {};//authInfo;
     }
 
     loginBaseUrl() {
@@ -72,9 +78,17 @@ export default class OneDriveApi{
         return this.client_secret;
     }
 
-    dispatch(name,fn_){
-        
-    }
+    dispatch(eventName, param) {
+		const ls = this.listeners_[eventName];
+		for (let i = 0; i < ls.length; i++) {
+			ls[i](param);
+		}
+	}
+
+	// eslint-disable-next-line @typescript-eslint/ban-types -- Old code before rule was applied
+	on(eventName, callback) {
+		this.listeners_[eventName].push(callback);
+	}
 
     isPublic() {
      return false;   
@@ -121,8 +135,7 @@ export default class OneDriveApi{
 		try {
             console.log('execTokenRequest',r)
 			const json = await r.json();
-            Setting.setValue(`sync.${3}.auth`, json ? JSON.stringify(json) : null);
-            Setting.setLocalValue(`sync.${3}.auth`, json)
+            
 			this.setAuth(json);
 		} catch (error) {
             console.error(error);
@@ -132,19 +145,61 @@ export default class OneDriveApi{
 			throw error;
 		}
 	}
-
+    async appDirectory() {
+		const driveId = '8c34790bf5a694e7';//this.accountProperties_.driveId;
+		const r = await this.execJson('GET', `/me/drives/${driveId}/special/approot`);
+		return `${r.parentReference.path}/${r.name}`;
+	}
+    
     setAuth(auth){
         this.auth_ = auth;
-        // this.dispatch('')
+        this.dispatch('authRefreshed',auth);
     }
     token() {
-        let auth = Setting.getLocalValue(`sync.${3}.auth`);
+        let auth = this.auth_;
         if(auth){
             auth = auth;
         }else{
             // auth = this.auth_;
         }
 		return auth ? auth.access_token : null;
+	}
+	authorizationTokenRemoved(data, depth = 0) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
+		const newData = {};
+
+		if (!data || typeof data !== 'object') {
+			return data;
+		}
+
+		if (depth > 5) {
+			return '[[depth-exceeded]]';
+		}
+
+		for (const key in data) {
+			if (key === 'Authorization') {
+				newData[key] = '[[DELETED]]';
+			} else {
+				newData[key] = this.authorizationTokenRemoved(data[key], depth + 1);
+			}
+		}
+
+		return newData;
+	}
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
+	oneDriveErrorResponseToError(errorResponse) {
+		if (!errorResponse) return new Error('Undefined error');
+
+		if (errorResponse.error) {
+			const e = errorResponse.error;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
+			const output = new Error(e.message);
+			if (e.code) output.code = e.code;
+			if (e.innerError) output.innerError = e.innerError;
+			return output;
+		} else {
+			return new Error(JSON.stringify(errorResponse));
+		}
 	}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
 	async exec(method, path, query = null, data = null, options = null) {
@@ -170,10 +225,10 @@ export default class OneDriveApi{
 		// In general, `path` contains a path relative to the base URL, but in some
 		// cases the full URL is provided (for example, when it's a URL that was
 		// retrieved from the API).
-		// if (url.indexOf('https://') !== 0) {
-		// 	const slash = path.indexOf('/') === 0 ? '' : '/';
-		// 	url = `/v1.0${slash}${path}`;
-		// }
+		if (url.indexOf('https://') !== 0) {
+			const slash = path.indexOf('/') === 0 ? '' : '/';
+			url = `/v1.0${slash}${path}`;
+		}
 
 		if (query) {
 			url += url.indexOf('?') < 0 ? '?' : '&';
@@ -306,21 +361,26 @@ export default class OneDriveApi{
 		this.accountProperties_ = accountProperties;
 	}
 
-	async execAccountPropertiesRequest() {
+	async execAccountPropertiesRequest(resolve,reject) {
 
 		try {
-			const response = await this.exec('GET', '/v1.0/me/drive');
+			const response = await this.exec('GET', '/me/drive');
 			const data = await response.json();
 			const accountProperties = { accountType: data.driveType, driveId: data.id };
+            this.setAccountProperties(accountProperties);
+            resolve && resolve(data);
 			return accountProperties;
 		} catch (error) {
+            reject && reject(error);
+            // this.refreshAccessToken();
 			throw new Error(`Could not retrieve account details (drive ID, Account type. Error code: ${error.code}, Error message: ${error.message}`);
+            
 		}
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
 	async execJson(method, path, query = null, data = null) {
-		const response = await this.exec(method, path, query, data);
+		const response = await this.exec(method, `${path}`, query, data);
 		const errorResponseText = await response.text();
 		try {
 			const output = JSON.parse(errorResponseText); // await response.json();

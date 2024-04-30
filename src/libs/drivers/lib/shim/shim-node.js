@@ -13,13 +13,71 @@ const shim = {
         clearTimeout(_id);
     },
 
-    fetch(_url,_configs) {
-        try{
-            return fetch(_url,_configs)
-        }catch(e){
-            console.error('fetch error',e.stack);
-        }
-    },
+    fetchMaxRetry_: 5,
+
+	fetchMaxRetrySet: (v) => {
+		const previous = shim.fetchMaxRetry_;
+		shim.fetchMaxRetry_ = v;
+		return previous;
+	},
+
+	// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any -- Old code before rule was applied, Old code before rule was applied
+	fetchWithRetry: async function(fetchFn, options = null) {
+		if (!options) options = {};
+		if (!options.timeout) options.timeout = 1000 * 120; // ms
+		if (!('maxRetry' in options)) options.maxRetry = shim.fetchMaxRetry_;
+
+		let retryCount = 0;
+		while (true) {
+			try {
+				const response = await fetchFn();
+				return response;
+			} catch (error) {
+				if (shim.fetchRequestCanBeRetried(error)) {
+					retryCount++;
+					if (retryCount > options.maxRetry) throw error;
+					await shim.msleep_(retryCount * 3000);
+				} else {
+					throw error;
+				}
+			}
+		}
+	},
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
+	fetch: async function(url, options = null) {
+		// The native fetch() throws an uncatchable error that crashes the
+		// app if calling it with an invalid URL such as '//.resource' or
+		// "http://ocloud. de" so detect if the URL is valid beforehand and
+		// throw a catchable error. Bug:
+		// https://github.com/facebook/react-native/issues/7436
+		let validatedUrl = url;
+		// try { // Check if the url is valid
+		// 	validatedUrl = new URL(url).href;
+		// } catch (error) { // If the url is not valid, a TypeError will be thrown
+		// 	throw new Error(`Not a valid URL: ${url}`);
+		// }
+
+		return shim.fetchWithRetry(() => {
+			// If the request has a body and it's not a GET call, and it
+			// doesn't have a Content-Type header we display a warning,
+			// because it could trigger a "Network request failed" error.
+			// https://github.com/facebook/react-native/issues/30176
+			if (options?.body && options?.method && options.method !== 'GET' && !options?.headers?.['Content-Type']) {
+				console.warn('Done a non-GET fetch call without a Content-Type header. It may make the request fail.', url, options);
+			}
+
+			// Among React Native `fetch()` many bugs, one of them is that
+			// it will truncate strings when they contain binary data.
+			// Browser fetch() or Node fetch() work fine but as always RN's
+			// one doesn't. There's no obvious way to fix this so we'll
+			// have to wait if it's eventually fixed upstream. See here for
+			// more info:
+			// https://github.com/laurent22/joplin/issues/3986#issuecomment-718019688
+
+			return fetch(validatedUrl, options);
+		}, options);
+	},
 
     appVersion() {
      return '1.0.0'   
@@ -247,9 +305,11 @@ shim.fetchBlob = async function(url, options) {
 };
 
 shim.uploadBlob = async function(url, options) {
-    if (!options || !options.path) throw new Error('uploadBlob: source file path is missing');
-    const content = await fs.readFile(options.path);
-    options = { ...options, body: content };
+    // if (!options || !options.path) throw new Error('uploadBlob: source file path is missing');
+    // const content = await fs.readFile(options.path);
+    const file = new FileReader();
+    file.readAsText(new Blob([]));
+    options = { ...options, body: file };
     return shim.fetch(url, options);
 };
 

@@ -12,17 +12,32 @@ export default async function start(onedriveUrl) {
     const api = await syncer
         .api();
     const searchOpt = parse(location.search);
-    console.log(api.token())
-    if(!searchOpt.code && !api.token()){
+    const auth = Setting.getLocalValue(`sync.${syncer.syncTargetId()}.auth`)
+    if(!searchOpt.code && !auth){
         location.href =  api.authCodeUrl('http://localhost/');
         return
     }else if( searchOpt.code){
         await api.execTokenRequest(searchOpt.code, 'http://localhost/', true);
-         location.search = '';
-    }
-    if(api.token()){
+        // Setting.setValue(`sync.${syncer.syncTargetId()}.auth`, json ? JSON.stringify(json) : null);
+        // Setting.setLocalValue(`sync.${syncer.syncTargetId()}.auth`, json);
         setTimeout(()=>{
-            syncer.initFileApi();
+            
+            location.search = '';
+        },2000);
+         
+    }
+    
+    console.log('get token after',auth)
+    if(auth){
+        api.setAuth(auth);
+        setTimeout(async ()=>{
+            const fileApi = await syncer.initFileApi();
+            console.log('fileApi',fileApi)
+            // fileApi.mkdir('testApiSend')
+            // fileApi.put('test1.txt', 'testing');
+            // fileApi.list()
+            // fileApi.stat('temp')
+            fileApi.mkdir('temp/testAdd2')
         },1000)
     }
     

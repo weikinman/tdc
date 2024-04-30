@@ -9,7 +9,10 @@ import { sprintf } from 'sprintf-js';
 import {Mutex} from 'async-mutex';
 
 const logger = {
-	info(){}
+	info(){},
+	debug(val){
+		console.log('file-api',val)
+	}
 }
 
 function systemPath(itemOrId, extension = null) {
@@ -98,7 +101,7 @@ class FileApi {
 	baseDir_;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Old code before rule was applied
 	driver_;
-	logger_ = new Logger();
+	logger_ = logger;
 	syncTargetId_ = null;
 	tempDirName_ = null;
 	requestRepeatCount_ = null; // For testing purpose only - normally this value should come from the driver
@@ -247,7 +250,7 @@ class FileApi {
 	}
 
 	setLogger(l) {
-		if (!l) l = new Logger();
+		if (!l) l = logger;
 		this.logger_ = l;
 	}
 
